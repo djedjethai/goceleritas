@@ -2,10 +2,12 @@ module myapp
 
 go 1.17
 
+replace github.com/djedjethai/celeritas v0.0.0 => ../celeritas
+
 require (
 	github.com/CloudyKit/jet/v6 v6.1.0
+	github.com/djedjethai/celeritas v0.0.0
 	github.com/go-chi/chi/v5 v5.0.4
-	github.com/tsawler/celeritas v0.0.0
 	github.com/upper/db/v4 v4.2.1
 )
 
@@ -74,5 +76,3 @@ require (
 	google.golang.org/protobuf v1.26.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
-
-replace github.com/tsawler/celeritas v0.0.0 => ../celeritas

@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/djedjethai/celeritas"
+	"github.com/djedjethai/celeritas/testfolder"
 	"github.com/go-chi/chi/v5"
-	"github.com/tsawler/celeritas"
-	"github.com/tsawler/celeritas/testfolder"
 	"net/http"
 )
 

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/tsawler/celeritas"
+	"github.com/djedjethai/celeritas"
 )
 
 type application struct {

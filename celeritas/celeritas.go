@@ -12,14 +12,14 @@ import (
 	"github.com/CloudyKit/jet/v6"
 	"github.com/alexedwards/scs/v2"
 	"github.com/dgraph-io/badger/v3"
+	"github.com/djedjethai/celeritas/cache"
+	"github.com/djedjethai/celeritas/mailer"
+	"github.com/djedjethai/celeritas/render"
+	"github.com/djedjethai/celeritas/session"
 	"github.com/go-chi/chi/v5"
 	"github.com/gomodule/redigo/redis"
 	"github.com/joho/godotenv"
 	"github.com/robfig/cron/v3"
-	"github.com/tsawler/celeritas/cache"
-	"github.com/tsawler/celeritas/mailer"
-	"github.com/tsawler/celeritas/render"
-	"github.com/tsawler/celeritas/session"
 )
 
 const version = "1.0.0"

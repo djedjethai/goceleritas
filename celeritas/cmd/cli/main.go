@@ -4,8 +4,8 @@ import (
 	"errors"
 	"os"
 
+	"github.com/djedjethai/celeritas"
 	"github.com/fatih/color"
-	"github.com/tsawler/celeritas"
 )
 
 const version = "1.0.0"
