@@ -1,12 +1,11 @@
 package main
 
 import (
-	"log"
+	// "log"
 	"net/http"
 
 	"github.com/djedjethai/celeritas"
-	"github.com/djedjethai/celeritas/filesystems/miniofilesystem"
-	"github.com/djedjethai/celeritas/testfolder"
+	// "github.com/djedjethai/celeritas/filesystems/miniofilesystem"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -15,21 +14,9 @@ func (a *application) routes() *chi.Mux {
 
 	// add routes here
 	a.get("/", a.Handlers.Home)
-	a.get("/test-route", testfolder.TestHandler)
-	a.get("/test-minio", func(w http.ResponseWriter, r *http.Request) {
-		// cast to miniofilesystem
-		f := a.App.FileSystems["MINIO"].(miniofilesystem.Minio)
-		files, err := f.List("")
-		if err != nil {
-			log.Println(err)
-			return
-		}
 
-		for _, file := range files {
-			log.Println(file)
-		}
-
-	})
+	a.get("/list-fs", a.Handlers.ListFS)
+	a.get("/files/upload", a.Handlers.UploadToFS)
 
 	// static routes
 	fileServer := http.FileServer(http.Dir("./public"))
