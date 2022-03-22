@@ -12,6 +12,7 @@ import (
 	"github.com/djedjethai/celeritas"
 	"github.com/djedjethai/celeritas/filesystems"
 	"github.com/djedjethai/celeritas/filesystems/miniofilesystem"
+	"github.com/djedjethai/celeritas/filesystems/sftpfilesystem"
 )
 
 // Handlers is the type for handlers, and gives access to Celeritas and models
@@ -49,6 +50,11 @@ func (h *Handlers) ListFS(w http.ResponseWriter, r *http.Request) {
 		case "MINIO":
 			f := h.App.FileSystems["MINIO"].(miniofilesystem.Minio)
 			fs = &f
+			fsType = "MINIO"
+		case "SFTP":
+			f := h.App.FileSystems["SFTP"].(sftpfilesystem.SFTP)
+			fs = &f
+			fsType = "SFTP"
 		}
 
 		l, err := fs.List(curPath)
