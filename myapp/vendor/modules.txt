@@ -61,6 +61,7 @@ github.com/djedjethai/celeritas/cache
 github.com/djedjethai/celeritas/filesystems
 github.com/djedjethai/celeritas/filesystems/miniofilesystem
 github.com/djedjethai/celeritas/filesystems/sftpfilesystem
+github.com/djedjethai/celeritas/filesystems/webdavfilesystem
 github.com/djedjethai/celeritas/mailer
 github.com/djedjethai/celeritas/render
 github.com/djedjethai/celeritas/session
@@ -240,6 +241,9 @@ github.com/sendgrid/sendgrid-go/helpers/mail
 # github.com/sirupsen/logrus v1.8.1
 ## explicit; go 1.13
 github.com/sirupsen/logrus
+# github.com/studio-b12/gowebdav v0.0.0-20220128162035-c7b1ff8a5e62
+## explicit; go 1.17
+github.com/studio-b12/gowebdav
 # github.com/upper/db/v4 v4.2.1
 ## explicit; go 1.15
 github.com/upper/db/v4

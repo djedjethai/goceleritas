@@ -61,7 +61,7 @@ func (s *SFTP) Put(filename, folder string) error {
 	defer f.Close()
 
 	log.Println("the path.Base(): ", path.Base(filename))
-	f2, err := client.Create(path.Base(filename))
+	f2, err := client.Create(fmt.Sprintf("%s/%s", folder, path.Base(filename)))
 	if err != nil {
 		return err
 	}
@@ -133,35 +133,43 @@ func (s *SFTP) Get(destination string, items ...string) error {
 	defer client.Close()
 
 	for _, item := range items {
-		// create a destination here on the app fs,
-		// where we gonna save the file coming from sftp server
-		dstFile, err := os.Create(fmt.Sprintf("%s/%s", destination, path.Base(item)))
+		// !!! here we use the func() to make sure the defer()
+		// will depend of the func() and so be close after each func execution
+		// other wise it will depend of the Get() and make create some data leak
+		err := func() error {
+			// create a destination here on the app fs,
+			// where we gonna save the file coming from sftp server
+			dstFile, err := os.Create(fmt.Sprintf("%s/%s", destination, path.Base(item)))
+			if err != nil {
+				return err
+			}
+			defer dstFile.Close()
+
+			// open source file
+			srcFile, err := client.Open(item)
+			if err != nil {
+				return err
+			}
+			defer srcFile.Close()
+
+			// copy src file to dest
+			_, err = io.Copy(dstFile, srcFile)
+			if err != nil {
+				return err
+			}
+
+			// flush the in-memory copy
+			// that is specific to sftp
+			err = dstFile.Sync()
+			if err != nil {
+				return err
+			}
+			return nil
+		}()
+
 		if err != nil {
 			return err
 		}
-		defer dstFile.Close()
-
-		// open source file
-		srcFile, err := client.Open(item)
-		if err != nil {
-			return err
-		}
-		defer srcFile.Close()
-
-		// copy src file to dest
-		bytes, err := io.Copy(dstFile, srcFile)
-		if err != nil {
-			return err
-		}
-		log.Println(fmt.Sprintf("%d bytes copied: ", bytes))
-
-		// flush the in-memory copy
-		// that is specific to sftp
-		err = dstFile.Sync()
-		if err != nil {
-			return err
-		}
-
 	}
 
 	return nil

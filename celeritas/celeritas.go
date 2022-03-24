@@ -15,6 +15,7 @@ import (
 	"github.com/djedjethai/celeritas/cache"
 	"github.com/djedjethai/celeritas/filesystems/miniofilesystem"
 	"github.com/djedjethai/celeritas/filesystems/sftpfilesystem"
+	"github.com/djedjethai/celeritas/filesystems/webdavfilesystem"
 	"github.com/djedjethai/celeritas/mailer"
 	"github.com/djedjethai/celeritas/render"
 	"github.com/djedjethai/celeritas/session"
@@ -413,6 +414,15 @@ func (c *Celeritas) createFileSystems() map[string]interface{} {
 			Port: os.Getenv("SFTP_PORT"),
 		}
 		fileSystems["SFTP"] = sftp
+	}
+
+	if os.Getenv("WEBDAV_HOST") != "" {
+		webdav := webdavfilesystem.WebDAV{
+			Host: os.Getenv("WEBDAV_HOST"),
+			User: os.Getenv("WEBDAV_USER"),
+			Pass: os.Getenv("WEBDAV_PASS"),
+		}
+		fileSystems["WEBDAV"] = webdav
 	}
 
 	return fileSystems

@@ -13,6 +13,7 @@ import (
 	"github.com/djedjethai/celeritas/filesystems"
 	"github.com/djedjethai/celeritas/filesystems/miniofilesystem"
 	"github.com/djedjethai/celeritas/filesystems/sftpfilesystem"
+	"github.com/djedjethai/celeritas/filesystems/webdavfilesystem"
 )
 
 // Handlers is the type for handlers, and gives access to Celeritas and models
@@ -55,6 +56,11 @@ func (h *Handlers) ListFS(w http.ResponseWriter, r *http.Request) {
 			f := h.App.FileSystems["SFTP"].(sftpfilesystem.SFTP)
 			fs = &f
 			fsType = "SFTP"
+		case "WEBDAV":
+			f := h.App.FileSystems["WEBDAV"].(webdavfilesystem.WebDAV)
+			fs = &f
+			fsType = "WEBDAV"
+
 		}
 
 		l, err := fs.List(curPath)
@@ -105,6 +111,21 @@ func (h *Handlers) PostUploadToFS(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+	case "SFTP":
+		fs := h.App.FileSystems["SFTP"].(sftpfilesystem.SFTP)
+		err = fs.Put(fileName, "")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	case "WEBDAV":
+		fs := h.App.FileSystems["WEBDAV"].(webdavfilesystem.WebDAV)
+		err = fs.Put(fileName, "")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 	}
 
 	h.App.Session.Put(r.Context(), "flash", "File uploaded!")
@@ -146,6 +167,13 @@ func (h *Handlers) DeleteFromFS(w http.ResponseWriter, r *http.Request) {
 	case "MINIO":
 		f := h.App.FileSystems["MINIO"].(miniofilesystem.Minio)
 		fs = &f
+	case "SFTP":
+		f := h.App.FileSystems["SFTP"].(sftpfilesystem.SFTP)
+		fs = &f
+	case "WEBDAV":
+		f := h.App.FileSystems["WEBDAV"].(webdavfilesystem.WebDAV)
+		fs = &f
+
 	}
 
 	deleted := fs.Delete([]string{file})
