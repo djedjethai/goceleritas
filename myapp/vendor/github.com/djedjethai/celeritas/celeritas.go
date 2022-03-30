@@ -14,6 +14,7 @@ import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/djedjethai/celeritas/cache"
 	"github.com/djedjethai/celeritas/filesystems/miniofilesystem"
+	"github.com/djedjethai/celeritas/filesystems/s3filesystem"
 	"github.com/djedjethai/celeritas/filesystems/sftpfilesystem"
 	"github.com/djedjethai/celeritas/filesystems/webdavfilesystem"
 	"github.com/djedjethai/celeritas/mailer"
@@ -423,6 +424,17 @@ func (c *Celeritas) createFileSystems() map[string]interface{} {
 			Pass: os.Getenv("WEBDAV_PASS"),
 		}
 		fileSystems["WEBDAV"] = webdav
+	}
+
+	if os.Getenv("S3_KEY") != "" {
+		s3 := s3filesystem.S3{
+			Key:      os.Getenv("S3_KEY"),
+			Secret:   os.Getenv("S3_SECRET"),
+			Region:   os.Getenv("S3_REGION"),
+			Endpoint: os.Getenv("S3_ENDPOINT"),
+			Bucket:   os.Getenv("S3_BUCKET"),
+		}
+		fileSystems["S3"] = s3
 	}
 
 	return fileSystems

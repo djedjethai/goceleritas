@@ -119,7 +119,7 @@ require (
 
 require (
 	github.com/containerd/continuity v0.2.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.3.1 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mailgun/mailgun-go/v4 v4.5.3 // indirect
 	github.com/minio/minio-go/v7 v7.0.23
