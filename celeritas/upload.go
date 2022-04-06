@@ -8,11 +8,13 @@ import (
 	"os"
 	"path"
 
-	"github.com/djedjethai/celeritas/fileSystems"
+	"github.com/djedjethai/celeritas/filesystems"
 	"github.com/gabriel-vasile/mimetype"
 )
 
-func (c *Celeritas) UploadFile(r *http.Request, destination, field string, fs fileSystems.FS) error {
+func (c *Celeritas) UploadFile(r *http.Request, destination, field string, fs filesystems.FS) error {
+
+	// exploded := os.Getenv("ALLOWED_FILETYPES")
 	fileName, err := c.getFileToUpload(r, field)
 	if err != nil {
 		c.ErrorLog.Println(err)
@@ -37,10 +39,15 @@ func (c *Celeritas) UploadFile(r *http.Request, destination, field string, fs fi
 
 	}
 
+	defer func() {
+		_ = os.Remove(fileName)
+	}()
+
 	return nil
 }
 
 func (c *Celeritas) getFileToUpload(r *http.Request, fieldName string) (string, error) {
+
 	_ = r.ParseMultipartForm(c.config.uploads.maxUploadSize)
 
 	file, header, err := r.FormFile(fieldName)
@@ -65,6 +72,7 @@ func (c *Celeritas) getFileToUpload(r *http.Request, fieldName string) (string, 
 
 	// see any kind of mimetype i can use
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_type
+	fmt.Println("see mime type err ooo: ", c.config.uploads.allowedMimeTypes)
 	if !inSlice(c.config.uploads.allowedMimeTypes, mimeType.String()) {
 		return "", errors.New("invalid file type uploaded")
 	}

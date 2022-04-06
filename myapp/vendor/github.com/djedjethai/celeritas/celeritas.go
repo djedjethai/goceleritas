@@ -54,6 +54,10 @@ type Celeritas struct {
 	Mail          mailer.Mail
 	Server        Server
 	FileSystems   map[string]interface{}
+	S3            s3filesystem.S3
+	SFTP          sftpfilesystem.SFTP
+	WebDAV        webdavfilesystem.WebDAV
+	Minio         miniofilesystem.Minio
 }
 
 type Server struct {
@@ -70,6 +74,12 @@ type config struct {
 	sessionType string
 	database    databaseConfig
 	redis       redisConfig
+	uploads     uploadConfig
+}
+
+type uploadConfig struct {
+	allowedMimeTypes []string
+	maxUploadSize    int64
 }
 
 // New reads the .env file, creates our application config, populates the Celeritas type with settings
@@ -142,6 +152,22 @@ func (c *Celeritas) New(rootPath string) error {
 	c.Mail = c.createMailer()
 	c.Routes = c.routes().(*chi.Mux)
 
+	// file uploads
+	exploded := strings.Split(os.Getenv("ALLOWED_FILETYPES"), ",")
+	var mimeTypes []string
+	for _, m := range exploded {
+		mimeTypes = append(mimeTypes, m)
+	}
+
+	var maxUploadSize int64
+	if max, err := strconv.Atoi(os.Getenv("MAX_UPLOAD_SIZE")); err != nil {
+		// that will be our max file size in any cases
+		// 10 << 20 ends to max 10megs??? of data
+		maxUploadSize = 10 << 20
+	} else {
+		maxUploadSize = int64(max)
+	}
+
 	c.config = config{
 		port:     os.Getenv("PORT"),
 		renderer: os.Getenv("RENDERER"),
@@ -161,6 +187,10 @@ func (c *Celeritas) New(rootPath string) error {
 			host:     os.Getenv("REDIS_HOST"),
 			password: os.Getenv("REDIS_PASSWORD"),
 			prefix:   os.Getenv("REDIS_PREFIX"),
+		},
+		uploads: uploadConfig{
+			allowedMimeTypes: mimeTypes,
+			maxUploadSize:    maxUploadSize,
 		},
 	}
 
@@ -253,7 +283,8 @@ func (c *Celeritas) ListenAndServe() error {
 		defer badgerConn.Close()
 	}
 
-	c.InfoLog.Printf("Listening on port %s", os.Getenv("PORT"))
+	// c.InfoLog.Printf("Listening on port %s", os.Getenv("PORT"))
+	c.InfoLog.Printf("see env %s", os.Getenv("ALLOWED_FILETYPES"))
 	err := srv.ListenAndServe()
 	// c.ErrorLog.Fatal(err)
 
@@ -405,6 +436,7 @@ func (c *Celeritas) createFileSystems() map[string]interface{} {
 		}
 
 		fileSystems["MINIO"] = minio
+		c.Minio = minio
 	}
 
 	if os.Getenv("SFTP_HOST") != "" {
@@ -415,6 +447,7 @@ func (c *Celeritas) createFileSystems() map[string]interface{} {
 			Port: os.Getenv("SFTP_PORT"),
 		}
 		fileSystems["SFTP"] = sftp
+		c.SFTP = sftp
 	}
 
 	if os.Getenv("WEBDAV_HOST") != "" {
@@ -424,6 +457,7 @@ func (c *Celeritas) createFileSystems() map[string]interface{} {
 			Pass: os.Getenv("WEBDAV_PASS"),
 		}
 		fileSystems["WEBDAV"] = webdav
+		c.WebDAV = webdav
 	}
 
 	if os.Getenv("S3_KEY") != "" {
@@ -435,6 +469,7 @@ func (c *Celeritas) createFileSystems() map[string]interface{} {
 			Bucket:   os.Getenv("S3_BUCKET"),
 		}
 		fileSystems["S3"] = s3
+		c.S3 = s3
 	}
 
 	return fileSystems

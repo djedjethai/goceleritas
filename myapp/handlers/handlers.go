@@ -31,6 +31,42 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// render the form form page for the user to upload a file
+func (h *Handlers) CeleritasUpload(w http.ResponseWriter, r *http.Request) {
+	err := h.render(w, r, "celeritas-upload", nil, nil)
+	if err != nil {
+		h.App.ErrorLog.Println("error rendering:", err)
+	}
+}
+
+// upload a file
+func (h *Handlers) PostCeleritasUpload(w http.ResponseWriter, r *http.Request) {
+
+	// like it it have export to the file-system
+	// err := h.App.UploadFile(r, "", "formFile", "")
+
+	// like this it will upload to minio
+	err := h.App.UploadFile(r, "", "formFile", &h.App.Minio)
+	if err != nil {
+		h.App.ErrorLog.Println("error rendering:", err)
+		h.App.Session.Put(r.Context(), "error", err.Error())
+	} else {
+		h.App.Session.Put(r.Context(), "flash", "uploaded!")
+	}
+
+	http.Redirect(w, r, "/upload", http.StatusSeeOther)
+
+}
+
+func inSlice(slice []string, val string) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}
+
 func (h *Handlers) ListFS(w http.ResponseWriter, r *http.Request) {
 	var fs filesystems.FS
 	var list []filesystems.Listing
@@ -100,6 +136,7 @@ func (h *Handlers) UploadToFS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) PostUploadToFS(w http.ResponseWriter, r *http.Request) {
+
 	fileName, err := getFileToUpload(r, "formFile")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

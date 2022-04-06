@@ -153,7 +153,7 @@ func (c *Celeritas) New(rootPath string) error {
 	c.Routes = c.routes().(*chi.Mux)
 
 	// file uploads
-	exploded := strings.Split(os.Getenv("ALLOWED_fILETYPES"), ",")
+	exploded := strings.Split(os.Getenv("ALLOWED_FILETYPES"), ",")
 	var mimeTypes []string
 	for _, m := range exploded {
 		mimeTypes = append(mimeTypes, m)
@@ -283,7 +283,8 @@ func (c *Celeritas) ListenAndServe() error {
 		defer badgerConn.Close()
 	}
 
-	c.InfoLog.Printf("Listening on port %s", os.Getenv("PORT"))
+	// c.InfoLog.Printf("Listening on port %s", os.Getenv("PORT"))
+	c.InfoLog.Printf("see env %s", os.Getenv("ALLOWED_FILETYPES"))
 	err := srv.ListenAndServe()
 	// c.ErrorLog.Fatal(err)
 
