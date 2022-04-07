@@ -11,7 +11,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: goframework
+      POSTGRES_DB: celeritas
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
 

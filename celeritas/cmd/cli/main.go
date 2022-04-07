@@ -14,7 +14,7 @@ var cel celeritas.Celeritas
 
 func main() {
 	var message string
-	arg1, arg2, arg3, err := validateInput()
+	arg1, arg2, arg3, arg4, err := validateInput()
 	if err != nil {
 		exitGracefully(err)
 	}
@@ -48,7 +48,7 @@ func main() {
 		if arg2 == "" {
 			exitGracefully(errors.New("make requires a subcommand: (migration|model|handler)"))
 		}
-		err = doMake(arg2, arg3)
+		err = doMake(arg2, arg3, arg4)
 		if err != nil {
 			exitGracefully(err)
 		}
@@ -60,12 +60,13 @@ func main() {
 	exitGracefully(nil, message)
 }
 
-func validateInput() (string, string, string, error) {
-	var arg1, arg2, arg3 string
+func validateInput() (string, string, string, string, error) {
+	var arg1, arg2, arg3, arg4 string
 
 	if len(os.Args) > 1 {
 		arg1 = os.Args[1]
 
+		// bc the first args is celeritas
 		if len(os.Args) >= 3 {
 			arg2 = os.Args[2]
 		}
@@ -73,13 +74,18 @@ func validateInput() (string, string, string, error) {
 		if len(os.Args) >= 4 {
 			arg3 = os.Args[3]
 		}
+
+		if len(os.Args) >= 5 {
+			arg4 = os.Args[4]
+		}
+
 	} else {
 		color.Red("Error: command required")
 		showHelp()
-		return "", "", "", errors.New("command required")
+		return "", "", "", "", errors.New("command required")
 	}
 
-	return arg1, arg2, arg3, nil
+	return arg1, arg2, arg3, arg4, nil
 }
 
 func exitGracefully(err error, msg ...string) {
