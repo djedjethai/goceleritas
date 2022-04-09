@@ -15,6 +15,12 @@ func (a *application) routes() *chi.Mux {
 	// add routes here
 	a.get("/", a.Handlers.Home)
 
+	a.App.Routes.Get("/users/login", a.Handlers.UserLogin)
+	a.App.Routes.Post("/users/login", a.Handlers.PostUserLogin)
+
+	a.App.Routes.Get("/auth/{provider}", a.Handlers.SocialLogin)
+	a.App.Routes.Get("/auth/{provider}/callback", a.Handlers.SocialMediaCallback)
+
 	a.get("/upload", a.Handlers.CeleritasUpload)
 	a.post("/upload", a.Handlers.PostCeleritasUpload)
 

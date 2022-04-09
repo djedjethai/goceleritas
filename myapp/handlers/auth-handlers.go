@@ -4,13 +4,21 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"myapp/data"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/CloudyKit/jet/v6"
-	"github.com/tsawler/celeritas/mailer"
-	"github.com/tsawler/celeritas/urlsigner"
+	"github.com/djedjethai/celeritas/mailer"
+	"github.com/djedjethai/celeritas/urlsigner"
+	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/sessions"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/gothic"
+	"github.com/markbates/goth/providers/github"
 )
 
 // UserLogin displays the login page
@@ -258,4 +266,101 @@ func (h *Handlers) PostResetPassword(w http.ResponseWriter, r *http.Request) {
 	// redirect
 	h.App.Session.Put(r.Context(), "flash", "Password reset. You can now log in.")
 	http.Redirect(w, r, "/users/login", http.StatusSeeOther)
+}
+
+func (h *Handlers) InitSocialAuth() {
+	scope := []string{"user"}
+	// gScope for google
+
+	goth.UseProviders(
+		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), os.Getenv("GITHUB_CALLBACK"), scope...),
+	)
+
+	// doing social auth with goth require a cookie-store
+	// which by default is Gorilla-cookie-store
+	// this session will exist "only" during the time the user is signing up
+	key := os.Getenv("KEY")
+	maxAge := 86400 * 30 // 86400 seconds == 1 day
+	st := sessions.NewCookieStore([]byte(key))
+	st.MaxAge(maxAge)
+	st.Options.Path = "/"
+	st.Options.HttpOnly = true // should not be available from js
+	st.Options.Secure = false
+
+	gothic.Store = st
+}
+
+func (h *Handlers) SocialLogin(w http.ResponseWriter, r *http.Request) {
+	provider := chi.URLParam(r, "provider")
+	h.App.Session.Put(r.Context(), "social_provider", provider)
+	h.InitSocialAuth()
+
+	if _, err := gothic.CompleteUserAuth(w, r); err == nil {
+		// user is already logged in
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	} else {
+		// attempt social login
+		gothic.BeginAuthHandler(w, r)
+	}
+}
+
+// if user is not connected(to his social account)
+// we start the gothic.BeginAuthHandler(), then google/or github
+// callBack this func
+func (h *Handlers) SocialMediaCallback(w http.ResponseWriter, r *http.Request) {
+	h.InitSocialAuth()
+	gUser, err := gothic.CompleteUserAuth(w, r) // get datas back from social
+	if err != nil {
+		h.App.Session.Put(r.Context(), "error", err.Error())
+		http.Redirect(w, r, "/users/login", http.StatusSeeOther)
+		return
+	}
+
+	// look up user using email address
+	var u data.User
+	var testUser *data.User
+
+	// gUser has been given back from the provider we are using
+	testUser, err = u.GetByEmail(gUser.Email)
+	if err != nil {
+		// at that time maybe there is an err bc the user do not exist in db
+		log.Println(err)
+		provider := h.App.Session.Get(r.Context(), "social_provider").(string)
+
+		// we don't have a user so add one
+		var newUser data.User
+		if provider == "github" {
+			exploded := strings.Split(gUser.Name, " ")
+			newUser.FirstName = exploded[0]
+			if len(exploded) > 1 {
+				newUser.LastName = exploded[1]
+			}
+		} else {
+
+		}
+
+		// we create an account on our system,
+		// in case the user delete their google account,
+		// they still can recover their account on our systhem
+		newUser.Email = gUser.Email
+		newUser.Active = 1
+		newUser.Password = h.randomString(20)
+		newUser.CreatedAt = time.Now()
+		newUser.UpdatedAt = time.Now()
+
+		_, err := newUser.Insert(newUser)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// we just add the user in db, getting it back give us the ID
+		testUser, _ = u.GetByEmail(gUser.Email)
+	}
+
+	h.App.Session.Put(r.Context(), "userID", testUser.ID)
+	h.App.Session.Put(r.Context(), "social_token", gUser.AccessToken)
+	h.App.Session.Put(r.Context(), "social_email", gUser.Email)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
